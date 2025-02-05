@@ -1,5 +1,9 @@
+import 'package:camellia_manito/pages/home_page_viewmodel.dart';
 import 'package:camellia_manito/pages/widgets/user_card_widget.dart';
+import 'package:camellia_manito/routes/route_info.dart';
+import 'package:go_router/go_router.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -13,9 +17,12 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   late Animation<Offset> _birdAnimation;
   final List<String> items = [];
 
+  late HomePageViewModel _viewModel;
+
   @override
   void initState() {
     super.initState();
+
     _birdController = AnimationController(
       duration: const Duration(milliseconds: 300),
       vsync: this,
@@ -28,12 +35,33 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       parent: _birdController,
       curve: Curves.linear,
     ));
+
+    _viewModel = context.read<HomePageViewModel>();
+    _viewModel.userListenable.addListener(_refresh);
+    _viewModel.enabledResultListenable.addListener(_refresh);
+
+    _viewModel.init();
+  }
+
+  void _pushEnrollPage() async {
+    final result = await context.push(RouteInfo.enroll.path);
+    if (result != null) {
+      _refresh();
+    }
   }
 
   @override
   void dispose() {
+    _viewModel.userListenable.removeListener(_refresh);
+    _viewModel.enabledResultListenable.removeListener(_refresh);
     _birdController.dispose();
+
     super.dispose();
+  }
+
+  void _refresh() {
+    print('ddd');
+    setState(() {});
   }
 
   @override
@@ -46,9 +74,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           gradient: LinearGradient(
             colors: [
               Colors.purple,
-              Colors.lightBlue,
+              Colors.red,
               Colors.lightGreen,
-              Colors.blue,
+              Colors.red,
               Colors.lightGreenAccent,
             ],
             begin: Alignment.topLeft,
@@ -59,41 +87,42 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           child: Column(
             children: [
               const SizedBox(height: 20),
-              const Text(
-                '동백할미네 마 - 니 - 또',
-                style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                    fontSize: 30),
+              Image.asset(
+                'assets/images/title.png',
+                width: 300,
               ),
               if (items.isEmpty)
                 Expanded(child: _buildEmptyCard())
               else
                 Expanded(
-                  child: ListView.builder(
-                      padding: const EdgeInsets.all(8),
-                      itemCount: items.length,
-                      itemBuilder: (context, index) {
-                        if (index == items.length - 1) {
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    margin:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
+                    decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(16),
+                        color: Colors.white.withOpacity(0.2),
+                        border: Border.all(
+                          width: 1.5,
+                          color: Colors.white,
+                        )),
+                    child: ListView.builder(
+                        // padding: const EdgeInsets.all(8),
+                        itemCount: items.length,
+                        itemBuilder: (context, index) {
                           return Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               UserCardWidget(
                                 index: index,
-                                width: 130,
-                                height: 130,
+                                size: 110,
                               ),
-                              _buildEnrollButton(),
+                              if (index == items.length - 1)
+                                _buildEnrollButton(),
                             ],
                           );
-                        }
-
-                        return UserCardWidget(
-                          index: index,
-                          width: 130,
-                          height: 130,
-                        );
-                      }),
+                        }),
+                  ),
                 ),
               _buildBird(),
             ],
@@ -112,8 +141,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           const Expanded(
             child: UserCardWidget(
               index: 5,
-              width: 180,
-              height: 90,
+              size: 180,
             ),
           ),
           _buildEnrollButton(),
@@ -123,23 +151,26 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   }
 
   Widget _buildEnrollButton() {
-    return ElevatedButton(
-      onPressed: () => {},
-      style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.white.withOpacity(0.4), // 버튼 배경색
-        surfaceTintColor: Colors.white.withOpacity(0.4),
-        shadowColor: Colors.transparent,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12), // 버튼의 둥근 모서리 값
+    return Container(
+      margin: const EdgeInsets.only(top: 8),
+      child: ElevatedButton(
+        onPressed: _pushEnrollPage,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.white.withOpacity(0.4), // 버튼 배경색
+          surfaceTintColor: Colors.white.withOpacity(0.4),
+          shadowColor: Colors.transparent,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12), // 버튼의 둥근 모서리 값
+          ),
         ),
-      ),
-      child: const Center(
-        child: Text(
-          "+",
-          style: TextStyle(
-            fontSize: 34,
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
+        child: const Center(
+          child: Text(
+            "+",
+            style: TextStyle(
+              fontSize: 34,
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ),
       ),
@@ -163,14 +194,10 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
               color: Colors.white,
               width: 100,
             ),
-            const Text(
-              '게임 시작',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-              ),
-            )
+            Image.asset(
+              'assets/images/start.png',
+              width: 80,
+            ),
           ],
         ),
       ),

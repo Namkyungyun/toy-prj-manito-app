@@ -7,7 +7,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   final appLogic = AppLogic();
-  await appLogic.bootStrapBackground();
+  await appLogic.bootStrap();
 
   runApp(
     MultiProvider(
@@ -19,6 +19,4 @@ void main() async {
       child: const App(),
     ),
   );
-
-  await appLogic.bootStrap();
 }

@@ -3,14 +3,12 @@ import 'package:flutter/material.dart';
 
 class UserCardWidget extends StatefulWidget {
   final int index;
-  final double width;
-  final double height;
+  final double size;
 
   const UserCardWidget({
     super.key,
     required this.index,
-    required this.width,
-    required this.height,
+    required this.size,
   });
 
   @override
@@ -21,7 +19,7 @@ class _UserCardWidgetState extends State<UserCardWidget> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: widget.height,
+      height: widget.size,
       margin: const EdgeInsets.symmetric(vertical: 8),
       padding: const EdgeInsets.symmetric(vertical: 8),
       decoration: BoxDecoration(
@@ -35,13 +33,13 @@ class _UserCardWidgetState extends State<UserCardWidget> {
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             FlowerWidget(
-              width: widget.width,
+              size: widget.size,
               onPressed: () {},
             ),
             Image.asset(
               'assets/images/grandma${widget.index}.png',
-              width: widget.width,
-              height: widget.width,
+              width: widget.size,
+              height: widget.size,
             ),
           ],
         ),

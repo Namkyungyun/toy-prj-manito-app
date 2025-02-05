@@ -1,5 +1,7 @@
-class AppLogic {
-  Future<void> bootStrap() async {}
+import 'package:camellia_manito/hive/hive_db.dart';
 
-  Future<void> bootStrapBackground() async {}
+class AppLogic {
+  Future<void> bootStrap() async {
+    await HiveDB.instance.init();
+  }
 }

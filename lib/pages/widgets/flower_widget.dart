@@ -3,13 +3,13 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 
 class FlowerWidget extends StatefulWidget {
-  final double width;
+  final double size;
   final VoidCallback onPressed;
 
   const FlowerWidget({
     super.key,
     required this.onPressed,
-    required this.width,
+    required this.size,
   });
 
   @override
@@ -17,6 +17,33 @@ class FlowerWidget extends StatefulWidget {
 }
 
 class _FlowerWidgetState extends State<FlowerWidget> {
+  double side = 0;
+  double center = 0;
+  double border = 1;
+
+  @override
+  void initState() {
+    super.initState();
+    side = ((widget.size > 130) ? widget.size / 3 : widget.size / 2);
+    center = (widget.size > 130) ? 90 : 50;
+
+    if (widget.size > 150) {
+      side = widget.size / 2.5;
+      center = widget.size / 1.7;
+      border = 4;
+      return;
+    } else if (widget.size > 130) {
+      side = widget.size / 3;
+      center = widget.size / 2.2;
+      border = 3;
+      return;
+    } else {
+      side = widget.size / 2.2;
+      center = widget.size / 1.6;
+      border = 3;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Stack(
@@ -28,40 +55,28 @@ class _FlowerWidgetState extends State<FlowerWidget> {
         for (int i = 0; i < 6; i++)
           Transform(
             transform: Matrix4.identity()
-              ..translate(40 * cos(i * pi / 3), 40 * sin(i * pi / 3)),
+              ..translate(
+                  (side - 20) * cos(i * pi / 3), (side - 20) * sin(i * pi / 3)),
             child: Container(
-              width:
-                  (widget.width > 150) ? widget.width / 3 : widget.width / 2.2,
-              height:
-                  (widget.width > 150) ? widget.width / 3 : widget.width / 2.2,
+              width: side,
+              height: side,
               decoration: BoxDecoration(
                 color: const Color.fromARGB(255, 214, 17, 83), // 내부 색상 (빨간색 계열)
                 shape: BoxShape.circle, // 원형 모양
                 border: Border.all(
                   color: Colors.black, // 검은색 테두리
-                  width: 4.0, // 테두리 두께
+                  width: border, // 테두리 두께
                 ),
               ),
             ),
           ),
-        SizedBox(
-          width: (widget.width > 150) ? 90 : 90,
-          height: (widget.width > 150) ? 90 : 90,
-          child: ElevatedButton(
-            onPressed: () => print('꽃 중앙 버튼 눌림'),
-            style: ElevatedButton.styleFrom(
-              shape: const CircleBorder(
-                side: BorderSide(
-                  color: Colors.black, // 검은색 테두리
-                  width: 4.0, // 테두리 두께
-                ),
-              ),
-              backgroundColor: Colors.amber.shade200, // 버튼 배경색
-            ),
-            child: const Text(
-              '',
-              style: TextStyle(fontSize: 16, color: Colors.black),
-            ),
+        Container(
+          width: center,
+          height: center,
+          decoration: BoxDecoration(
+            color: Colors.amber.shade200,
+            borderRadius: BorderRadius.circular(100),
+            border: Border.all(width: border),
           ),
         ),
       ],
@@ -92,7 +107,7 @@ class CurvedBarPainter extends CustomPainter {
     Paint borderPaint = Paint()
       ..color = Colors.black // 테두리 색상
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 5.0; // 테두리 두께
+      ..strokeWidth = 4.0; // 테두리 두께
 
     Path path = Path();
     double width = size.width;

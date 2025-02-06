@@ -15,7 +15,6 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   late AnimationController _birdController;
   late Animation<Offset> _birdAnimation;
-  final List<String> items = [];
 
   late HomePageViewModel _viewModel;
 
@@ -43,13 +42,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     _viewModel.init();
   }
 
-  void _pushEnrollPage() async {
-    final result = await context.push(RouteInfo.enroll.path);
-    if (result != null) {
-      _refresh();
-    }
-  }
-
   @override
   void dispose() {
     _viewModel.userListenable.removeListener(_refresh);
@@ -59,8 +51,41 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     super.dispose();
   }
 
+  void _pushEnrollPage() async {
+    final result = await context.push(RouteInfo.enroll.path);
+
+    if (result != null) {
+      await _viewModel.init();
+      _refresh();
+    }
+  }
+
+  void _pushGamePage() async {
+    if (_viewModel.users.length % 2 != 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            '짝수 인원으로 게임을 시작할 수 있습니다.',
+            textAlign: TextAlign.center,
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
+        ),
+      );
+    }
+
+    final result = await context.push(RouteInfo.game.path);
+
+    if (result != null) {
+      await _viewModel.init();
+      _refresh();
+    }
+  }
+
+  void _pushResultPage() async {
+    context.push(RouteInfo.result.path);
+  }
+
   void _refresh() {
-    print('ddd');
     setState(() {});
   }
 
@@ -91,7 +116,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                 'assets/images/title.png',
                 width: 300,
               ),
-              if (items.isEmpty)
+              if (_viewModel.users.isEmpty)
                 Expanded(child: _buildEmptyCard())
               else
                 Expanded(
@@ -108,23 +133,47 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                         )),
                     child: ListView.builder(
                         // padding: const EdgeInsets.all(8),
-                        itemCount: items.length,
+                        itemCount: _viewModel.users.length,
                         itemBuilder: (context, index) {
                           return Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               UserCardWidget(
                                 index: index,
+                                user: _viewModel.users[index],
                                 size: 110,
                               ),
-                              if (index == items.length - 1)
+                              if (index == _viewModel.users.length - 1 &&
+                                  !_viewModel.enabledResult)
                                 _buildEnrollButton(),
                             ],
                           );
                         }),
                   ),
                 ),
-              _buildBird(),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    GestureDetector(
+                      onTap: () async {
+                        _viewModel.fetchReset();
+                      },
+                      child: _buildReset(),
+                    ),
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: (_viewModel.enabledResult)
+                            ? _pushResultPage
+                            : _pushGamePage,
+                        child: _buildBird(),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ],
           ),
         ),
@@ -141,6 +190,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           const Expanded(
             child: UserCardWidget(
               index: 5,
+              user: null,
               size: 180,
             ),
           ),
@@ -177,8 +227,20 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     );
   }
 
+  Widget _buildReset() {
+    if (_viewModel.users.isEmpty) {
+      return Container();
+    }
+
+    return Image.asset(
+      'assets/images/reset.png',
+      width: 60,
+      color: const Color.fromARGB(255, 235, 195, 242),
+    );
+  }
+
   Widget _buildBird() {
-    if (items.isEmpty) {
+    if (_viewModel.users.isEmpty) {
       return Container();
     }
 
@@ -190,13 +252,13 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Image.asset(
-              'assets/images/bird.png',
-              color: Colors.white,
-              width: 100,
+              'assets/images/${_viewModel.enabledResult ? 'result' : 'start'}.png',
+              width: 80,
             ),
             Image.asset(
-              'assets/images/start.png',
-              width: 80,
+              'assets/images/grandma10.png',
+              // color: Colors.white,
+              width: 100,
             ),
           ],
         ),

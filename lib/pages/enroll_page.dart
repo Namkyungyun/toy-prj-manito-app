@@ -1,9 +1,8 @@
 import 'dart:convert';
-import 'dart:io';
+import 'package:camellia_manito/pages/enroll_page%20_viewmodel.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
 class EnrollPage extends StatefulWidget {
@@ -16,41 +15,31 @@ class EnrollPage extends StatefulWidget {
 class _EnrollPageState extends State<EnrollPage> {
   final TextEditingController _controller = TextEditingController();
   final _focusNode = FocusNode();
-  String? _base64Image;
+
+  late EnrollPageViewModel _viewModel;
 
   @override
   void initState() {
     super.initState();
+
+    _viewModel = context.read<EnrollPageViewModel>();
+    _viewModel.imageDataListenable.addListener(_refresh);
+    _viewModel.enabledEnrollListenable.addListener(_refresh);
   }
 
   @override
   void dispose() {
     _controller.dispose();
     _focusNode.dispose();
+
+    _viewModel.imageDataListenable.removeListener(_refresh);
+    _viewModel.enabledEnrollListenable.removeListener(_refresh);
+
     super.dispose();
   }
 
   void _refresh() {
     setState(() {});
-  }
-
-  /// 📌 이미지 선택 및 Base64 인코딩 후 저장
-  Future<void> _pickImage() async {
-    final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
-
-    if (pickedFile != null) {
-      final bytes = await File(pickedFile.path).readAsBytes();
-      final base64String = base64Encode(bytes);
-
-      setState(() {
-        _base64Image = base64String;
-      });
-
-      // Hive에 저장
-      // var box = Hive.box('userBox');
-      // await box.put('profileImage', base64String);
-    }
   }
 
   @override
@@ -74,26 +63,7 @@ class _EnrollPageState extends State<EnrollPage> {
         ),
         child: Scaffold(
           backgroundColor: Colors.transparent,
-          appBar: AppBar(
-            backgroundColor: Colors.transparent,
-            leading: IconButton(
-              onPressed: () => context.pop(),
-              icon: const Icon(
-                Icons.arrow_back_ios,
-                color: Colors.white,
-              ),
-            ),
-            actions: [
-              IconButton(
-                onPressed: () => context.pop(1),
-                icon: const Icon(
-                  Icons.check_circle,
-                  color: Colors.white,
-                  size: 35,
-                ),
-              ),
-            ],
-          ),
+          appBar: _buildAppbar(),
           body: SafeArea(
             child: Padding(
               padding: const EdgeInsets.all(16.0),
@@ -104,7 +74,7 @@ class _EnrollPageState extends State<EnrollPage> {
                       mainAxisAlignment: MainAxisAlignment.start,
                       children: [
                         GestureDetector(
-                          onTap: _pickImage,
+                          onTap: _viewModel.setImage,
                           child: SizedBox(
                               width: 250,
                               height: 250,
@@ -124,8 +94,45 @@ class _EnrollPageState extends State<EnrollPage> {
     );
   }
 
+  AppBar _buildAppbar() {
+    return AppBar(
+      backgroundColor: Colors.transparent,
+      leading: IconButton(
+        onPressed: () => context.pop(),
+        icon: const Icon(
+          Icons.arrow_back_ios,
+          color: Colors.white,
+        ),
+      ),
+      actions: [
+        IconButton(
+          onPressed: () async {
+            if (_viewModel.enabledEnrollment) {
+              await _viewModel.save();
+              if (mounted) {
+                context.pop(1);
+              }
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('프로필 사진과 이름을 입력해주세요.')),
+              );
+            }
+          },
+          icon: const Icon(
+            Icons.check_circle,
+            color: Colors.white,
+            size: 35,
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildNameField() {
     return TextField(
+      onChanged: (text) {
+        _viewModel.setName(text);
+      },
       controller: _controller,
       focusNode: _focusNode,
       style: const TextStyle(color: Colors.white), // ✅ 텍스트 색상 흰색
@@ -150,10 +157,10 @@ class _EnrollPageState extends State<EnrollPage> {
   }
 
   Widget _buildProfileImage() {
-    if (_base64Image != null) {
+    if (_viewModel.imageData != null) {
       return CircleAvatar(
         radius: 60,
-        backgroundImage: MemoryImage(base64Decode(_base64Image!)),
+        backgroundImage: MemoryImage(base64Decode(_viewModel.imageData)),
       );
     } else {
       return CircleAvatar(
@@ -162,11 +169,5 @@ class _EnrollPageState extends State<EnrollPage> {
         child: const Icon(Icons.camera_alt, size: 80, color: Colors.white),
       );
     }
-  }
-
-  void test() {
-    final string = '';
-    Codec<String, String> stringToBase64 = utf8.fuse(base64);
-    String token = stringToBase64.encode(string);
   }
 }

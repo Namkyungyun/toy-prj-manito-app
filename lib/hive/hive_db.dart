@@ -1,3 +1,7 @@
+import 'dart:convert';
+import 'dart:math';
+
+import 'package:camellia_manito/hive/hive_db_key.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
 class HiveDB {
@@ -16,56 +20,117 @@ class HiveDB {
     box = await Hive.openBox('myBox');
   }
 
-  // set data
-  Future<void> setUser() async {
-    // 데이터 저장
-    box.put('users', 'FlutterUser');
+  Future<void> reset() async {
+    await deleteUsers();
+    await setAllGrandma();
+    await setResultStatus(false);
+    await deletePairs();
   }
 
-  // read data
-  Future<void> getUsers() async {
-    // 데이터 불러오기
-    String users = box.get('users', defaultValue: 'Unknown');
-    print(users); // FlutterUser
+  ///////////////////
+  // users
+  Future<List> getUsers() async {
+    String data = await box.get(HiveDbKey.USERS.key, defaultValue: '[]');
+    return jsonDecode(data);
   }
 
-  //////////////////////
-  /// 🔹 데이터 저장 (새로운 key-value 추가)
-  Future<void> saveData(String key, String value) async {
-    await box.put(key, value);
-    print('저장 완료: $key → $value');
+  Future<void> saveUser(dynamic newValue) async {
+    List users = await getUsers();
+    users.add(newValue);
+
+    String newUsers = jsonEncode(users);
+    await box.put(HiveDbKey.USERS.key, newUsers);
   }
 
-  /// 🔹 데이터 수정 (기존 키에 대한 값 변경)
-  Future<void> updateData(String key, String newValue) async {
-    if (box.containsKey(key)) {
-      await box.put(key, newValue); // 기존 키에 새 값 저장
-      print('업데이트 완료: $key → $newValue');
-    } else {
-      await saveData(key, newValue);
+  Future<void> deleteUsers() async {
+    await box.delete(HiveDbKey.USERS.key);
+  }
+
+  ///////////////////
+  // gradma character
+  Future<List> getGrandma() async {
+    String data = await box.get(HiveDbKey.GRANDMA.key, defaultValue: '[]');
+    return jsonDecode(data);
+  }
+
+  Future<void> setAllGrandma() async {
+    var data = [];
+    for (var i = 0; i < 8; i++) {
+      data.add('grandma$i.png');
+    }
+
+    await box.put(HiveDbKey.GRANDMA.key, jsonEncode(data));
+  }
+
+  Future<void> deleteOneGrandma(String value) async {
+    List grandma = await getGrandma();
+
+    if (grandma.contains(value)) {
+      grandma.remove(value);
+      String remainGrandma = jsonEncode(grandma);
+
+      await box.put(HiveDbKey.GRANDMA.key, remainGrandma);
     }
   }
 
-  /// 🔹 데이터 삭제 (해당 key 제거)
-  Future<void> deleteData(String key) async {
-    var box = Hive.box('myBox');
-
-    if (box.containsKey(key)) {
-      await box.delete(key);
-      print('삭제 완료: $key');
-    } else {
-      print('삭제 실패: $key 없음');
-    }
+  ///////////////////
+  /// enabled result
+  Future<bool> getResultStatus() async {
+    String data = await box.get(HiveDbKey.RESULT.key, defaultValue: 'false');
+    return jsonDecode(data);
   }
 
-  /// 🔹 데이터 불러오기 (저장된 값 가져오기)
-  Future<void> loadData(String key) async {
-    String? value = box.get(key);
+  Future<void> setResultStatus(bool result) async {
+    await box.put(HiveDbKey.RESULT.key, '$result');
+  }
 
-    if (value != null) {
-      print('불러오기 완료: $key → $value');
-    } else {
-      print('불러오기 실패: $key 없음');
+  //////////////////
+  /// game play
+  Future<void> generateGameResult(List users) async {
+    List result = [];
+    List alreadyPairedUsers = [];
+    Map<dynamic, List> gameBoard = {};
+
+    // 게임판 세팅 ( 유저 : 유저제외한 리스트 )
+    for (var user in users) {
+      List list = [...users];
+      list.remove(user);
+
+      gameBoard[user] = list;
     }
+
+    // 짝꿍 만들기
+    dynamic players = gameBoard.keys;
+    for (var me in players) {
+      List myBoard = gameBoard[me]!;
+
+      // 이미 짝궁이된 유저는 제외하기
+      for (var user in alreadyPairedUsers) {
+        if (myBoard.contains(user)) {
+          myBoard.remove(user);
+        }
+      }
+
+      // 랜덤 추출
+      int randomInt =
+          (myBoard.length > 1) ? Random().nextInt(myBoard.length) : 0;
+      var myPair = myBoard[randomInt];
+
+      // 결과 넣기
+      var myResult = {me['name']: myPair['name']};
+      result.add(myResult);
+
+      // 짝궁이된자 제외 목록에 넣기
+      alreadyPairedUsers.add(myPair);
+    }
+
+    // pair 저장
+    await box.put(HiveDbKey.PAIRS.key, jsonEncode(result));
+    // 결과 나옴 저장
+    await setResultStatus(true);
+  }
+
+  Future<void> deletePairs() async {
+    await box.delete(HiveDbKey.PAIRS.key);
   }
 }

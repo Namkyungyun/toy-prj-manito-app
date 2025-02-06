@@ -1,15 +1,18 @@
+import 'dart:convert';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
 
 class FlowerWidget extends StatefulWidget {
   final double size;
+  final String? image;
   final VoidCallback onPressed;
 
   const FlowerWidget({
     super.key,
-    required this.onPressed,
     required this.size,
+    this.image,
+    required this.onPressed,
   });
 
   @override
@@ -70,17 +73,37 @@ class _FlowerWidgetState extends State<FlowerWidget> {
               ),
             ),
           ),
-        Container(
-          width: center,
-          height: center,
-          decoration: BoxDecoration(
-            color: Colors.amber.shade200,
-            borderRadius: BorderRadius.circular(100),
-            border: Border.all(width: border),
-          ),
-        ),
+        _buildCenter(),
       ],
     );
+  }
+
+  Widget _buildCenter() {
+    if (widget.image != null) {
+      return Container(
+        width: center,
+        height: center,
+        decoration: BoxDecoration(
+          color: Colors.amber.shade200,
+          borderRadius: BorderRadius.circular(100),
+          border: Border.all(width: border),
+        ),
+        child: CircleAvatar(
+          radius: 60,
+          backgroundImage: MemoryImage(base64Decode(widget.image!)),
+        ),
+      );
+    } else {
+      return Container(
+        width: center,
+        height: center,
+        decoration: BoxDecoration(
+          color: Colors.amber.shade200,
+          borderRadius: BorderRadius.circular(100),
+          border: Border.all(width: border),
+        ),
+      );
+    }
   }
 }
 

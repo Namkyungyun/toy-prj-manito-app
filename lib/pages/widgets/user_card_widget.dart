@@ -3,11 +3,13 @@ import 'package:flutter/material.dart';
 
 class UserCardWidget extends StatefulWidget {
   final int index;
+  final dynamic user;
   final double size;
 
   const UserCardWidget({
     super.key,
     required this.index,
+    required this.user,
     required this.size,
   });
 
@@ -16,6 +18,19 @@ class UserCardWidget extends StatefulWidget {
 }
 
 class _UserCardWidgetState extends State<UserCardWidget> {
+  String? _userImage = null;
+  String _grandmaImage = 'assets/images/grandma10.png';
+
+  @override
+  void initState() {
+    super.initState();
+
+    _userImage = (widget.user == null) ? null : widget.user["image"];
+    _grandmaImage = (widget.user == null)
+        ? _grandmaImage
+        : 'assets/images/${widget.user['grandma']}';
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -34,10 +49,11 @@ class _UserCardWidgetState extends State<UserCardWidget> {
           children: [
             FlowerWidget(
               size: widget.size,
+              image: _userImage,
               onPressed: () {},
             ),
             Image.asset(
-              'assets/images/grandma${widget.index}.png',
+              _grandmaImage,
               width: widget.size,
               height: widget.size,
             ),

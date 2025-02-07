@@ -18,7 +18,7 @@ class UserCardWidget extends StatefulWidget {
 }
 
 class _UserCardWidgetState extends State<UserCardWidget> {
-  String? _userImage = null;
+  String? _userImage;
   String _grandmaImage = 'assets/images/grandma10.png';
 
   @override

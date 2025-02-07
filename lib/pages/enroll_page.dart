@@ -1,5 +1,5 @@
-import 'dart:convert';
 import 'package:camellia_manito/pages/enroll_page%20_viewmodel.dart';
+import 'package:camellia_manito/pages/widgets/enroll_profile_widget.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -76,9 +76,13 @@ class _EnrollPageState extends State<EnrollPage> {
                         GestureDetector(
                           onTap: _viewModel.setImage,
                           child: SizedBox(
-                              width: 250,
-                              height: 250,
-                              child: _buildProfileImage()), // 동그란 프로필 이미지
+                            width: 250,
+                            height: 250,
+                            child: EnrollProfileWidget(
+                              size: 60,
+                              imageData: _viewModel.imageData,
+                            ),
+                          ), // 동그란 프로필 이미지
                         ),
                         const SizedBox(height: 30),
                         _buildNameField(),
@@ -107,6 +111,8 @@ class _EnrollPageState extends State<EnrollPage> {
       actions: [
         IconButton(
           onPressed: () async {
+            _viewModel.validateEnrollment();
+
             if (_viewModel.enabledEnrollment) {
               await _viewModel.save();
               if (mounted) {
@@ -130,19 +136,22 @@ class _EnrollPageState extends State<EnrollPage> {
 
   Widget _buildNameField() {
     return TextField(
-      onChanged: (text) {
-        _viewModel.setName(text);
+      onChanged: (value) {
+        _viewModel.setName(value);
       },
       controller: _controller,
       focusNode: _focusNode,
-      style: const TextStyle(color: Colors.white), // ✅ 텍스트 색상 흰색
+      style: const TextStyle(color: Colors.white, fontSize: 22), // ✅ 텍스트 색상 흰색
       inputFormatters: [
         FilteringTextInputFormatter.allow(
-            RegExp(r'^[a-zA-Z가-힣\s]*$')), // ✅ 한글 & 영문만 입력 가능
+          RegExp(r'^[a-zA-Zㄱ-ㅎㅏ-ㅣ가-힣\s]*$'), // 조합 중인 한글 허용
+        ),
       ],
       decoration: InputDecoration(
         labelText: '이름 입력',
-        labelStyle: const TextStyle(color: Colors.white), // ✅ 라벨 색상 흰색
+        labelStyle:
+            const TextStyle(color: Colors.white, fontSize: 22), // ✅ 라벨 색상 흰색
+        hintStyle: const TextStyle(color: Colors.white, fontSize: 22),
         enabledBorder: OutlineInputBorder(
           borderSide: const BorderSide(color: Colors.white), // ✅ 기본 테두리 흰색
           borderRadius: BorderRadius.circular(10),
@@ -154,20 +163,5 @@ class _EnrollPageState extends State<EnrollPage> {
         ),
       ),
     );
-  }
-
-  Widget _buildProfileImage() {
-    if (_viewModel.imageData != null) {
-      return CircleAvatar(
-        radius: 60,
-        backgroundImage: MemoryImage(base64Decode(_viewModel.imageData)),
-      );
-    } else {
-      return CircleAvatar(
-        radius: 60,
-        backgroundColor: Colors.white.withOpacity(0.5),
-        child: const Icon(Icons.camera_alt, size: 80, color: Colors.white),
-      );
-    }
   }
 }

@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'dart:math';
 
+import 'package:camellia_manito/pages/widgets/cached_profile_widget.dart';
+import 'package:camellia_manito/pages/widgets/enroll_profile_widget.dart';
 import 'package:flutter/material.dart';
 
 class FlowerWidget extends StatefulWidget {
@@ -88,9 +90,9 @@ class _FlowerWidgetState extends State<FlowerWidget> {
           borderRadius: BorderRadius.circular(100),
           border: Border.all(width: border),
         ),
-        child: CircleAvatar(
-          radius: 60,
-          backgroundImage: MemoryImage(base64Decode(widget.image!)),
+        child: CachedProfileWidget(
+          imagePath: widget.image!,
+          size: 60,
         ),
       );
     } else {

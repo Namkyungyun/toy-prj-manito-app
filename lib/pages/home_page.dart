@@ -1,3 +1,4 @@
+import 'package:camellia_manito/pages/dialog/reset_alert.dart';
 import 'package:camellia_manito/pages/home_page_viewmodel.dart';
 import 'package:camellia_manito/pages/widgets/user_card_widget.dart';
 import 'package:camellia_manito/routes/route_info.dart';
@@ -61,18 +62,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   }
 
   void _pushGamePage() async {
-    if (_viewModel.users.length % 2 != 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            '짝수 인원으로 게임을 시작할 수 있습니다.',
-            textAlign: TextAlign.center,
-            style: TextStyle(fontWeight: FontWeight.bold),
-          ),
-        ),
-      );
-    }
-
     final result = await context.push(RouteInfo.game.path);
 
     if (result != null) {
@@ -83,6 +72,22 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
   void _pushResultPage() async {
     context.push(RouteInfo.result.path);
+  }
+
+  void _showResetAlert() {
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (BuildContext context) {
+        return GestureDetector(
+            onDoubleTap: () {
+              context.pop();
+            },
+            child: ResetAlert(
+              onReset: _viewModel.fetchReset,
+            ));
+      },
+    );
   }
 
   void _refresh() {
@@ -158,9 +163,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     GestureDetector(
-                      onTap: () async {
-                        _viewModel.fetchReset();
-                      },
+                      onTap: _showResetAlert,
                       child: _buildReset(),
                     ),
                     Expanded(
@@ -171,7 +174,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                         child: _buildBird(),
                       ),
                     ),
-                  ],
+                  ], // 씨 에이 비
                 ),
               ),
             ],

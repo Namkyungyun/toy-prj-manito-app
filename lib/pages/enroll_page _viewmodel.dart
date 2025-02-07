@@ -22,7 +22,6 @@ class EnrollPageViewModel {
 
   void setName(String data) {
     _name = data;
-    validateEnrollment();
   }
 
   void setImage() async {
@@ -35,7 +34,6 @@ class EnrollPageViewModel {
 
       _imageData.value = base64String;
     }
-    validateEnrollment();
   }
 
   void validateEnrollment() {

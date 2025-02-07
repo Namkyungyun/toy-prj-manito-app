@@ -31,7 +31,7 @@ class GamePageViewModel {
   }
 
   Future<void> play() async {
-    await hive.generateGameResult(usersData);
+    await hive.generatePair(usersData);
     await Future.delayed(const Duration(seconds: 5));
     await getResult();
   }
@@ -52,12 +52,7 @@ class GamePageViewModel {
           radius: 80, // ✅ 모든 공의 크기를 동일하게 설정 (150)
           dx: random.nextDouble() * 5 - 2.5,
           dy: random.nextDouble() * 5 - 2.5,
-          base64Image: usersData[i]["image"],
-          borderColor: Color.fromARGB(
-              255, // ✅ 랜덤 보더 색상
-              random.nextInt(256),
-              random.nextInt(256),
-              random.nextInt(256)),
+          imagePath: usersData[i]["image"],
         ),
       );
     }
